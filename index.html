@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTCA Mock Exam — 60 Questions (Randomized Pool)</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #1a1d29;
+    --panel2: #20243299;
+    --border: #2e3344;
+    --text: #e6e8ef;
+    --muted: #9aa1b5;
+    --accent: #7c5cff;
+    --accent2: #4cc9f0;
+    --good: #35d07f;
+    --bad: #ff5c7a;
+    --warn: #ffb64c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 800px at 80% -10%, #241f3b 0%, var(--bg) 55%);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 24px 32px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { font-size: 1.4rem; margin: 0; letter-spacing: 0.2px; }
+  header h1 span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 0 20px 60px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-top: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .top-bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: space-between; }
+  .stat {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat b { color: var(--text); }
+  #timer.low { color: var(--bad); font-weight: 700; }
+  .progress-track {
+    height: 8px;
+    background: var(--panel2);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 16px 0 4px;
+    border: 1px solid var(--border);
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width 0.25s ease;
+  }
+  .q-index { color: var(--muted); font-size: 0.85rem; margin-bottom: 6px; }
+  .q-text { font-size: 1.15rem; line-height: 1.5; margin: 8px 0 18px; font-weight: 600; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.05s;
+  }
+  .option:hover { border-color: var(--accent); }
+  .option.selected { border-color: var(--accent); background: #2a2440; }
+  .option.correct { border-color: var(--good); background: #123a2a; }
+  .option.incorrect { border-color: var(--bad); background: #3a1620; }
+  .options.answered .option { cursor: default; }
+  .options.answered .option:hover { border-color: var(--border); }
+  .options.answered .option.correct:hover { border-color: var(--good); }
+  .options.answered .option.incorrect:hover { border-color: var(--bad); }
+  .option input { display: none; }
+  .marker {
+    width: 22px; height: 22px; flex: 0 0 22px;
+    border-radius: 6px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; color: var(--muted); margin-top: 1px;
+  }
+  .option.selected .marker { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .option.correct .marker { background: var(--good); color: #052014; border-color: var(--good); }
+  .option.incorrect .marker { background: var(--bad); color: #2a0510; border-color: var(--bad); }
+  .explain {
+    margin-top: 14px; padding: 12px 14px; border-radius: 10px;
+    background: #14182299; border: 1px dashed var(--border);
+    font-size: 0.9rem; color: var(--muted); display: none;
+  }
+  .explain.show { display: block; }
+  .explain b { color: var(--text); }
+  .nav-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 22px; flex-wrap: wrap; gap: 10px;
+  }
+  button {
+    font-family: inherit; cursor: pointer; border: none; border-radius: 10px;
+    padding: 11px 20px; font-size: 0.95rem; font-weight: 600;
+    transition: transform 0.05s, opacity 0.15s;
+  }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: linear-gradient(90deg, var(--accent), var(--accent2)); color: #fff; }
+  .btn-secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .grid-nav { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 18px; }
+  .grid-nav button {
+    padding: 0; height: 34px; font-size: 0.8rem;
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+  }
+  .grid-nav button.answered { background: #2a2b40; color: var(--text); border-color: var(--accent); }
+  .grid-nav button.current { outline: 2px solid var(--accent2); }
+  #start-screen, #result-screen { text-align: center; }
+  #start-screen p, #result-screen p { color: var(--muted); line-height: 1.6; }
+  .domain-table {
+    width: 100%; border-collapse: collapse; margin: 18px 0; text-align: left; font-size: 0.85rem;
+  }
+  .domain-table th, .domain-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .domain-table th { color: var(--muted); font-weight: 600; }
+  .score-circle {
+    width: 160px; height: 160px; border-radius: 50%; margin: 20px auto;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    border: 6px solid var(--accent); background: var(--panel2);
+  }
+  .score-circle .pct { font-size: 2rem; font-weight: 800; }
+  .score-circle .lbl { font-size: 0.8rem; color: var(--muted); }
+  .pass { color: var(--good); }
+  .fail { color: var(--bad); }
+  .review-list { text-align: left; margin-top: 24px; }
+  .review-item {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; margin-bottom: 10px;
+  }
+  .review-item .tag {
+    display: inline-block; font-size: 0.72rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; margin-bottom: 6px;
+  }
+  .tag.ok { background: #123a2a; color: var(--good); }
+  .tag.no { background: #3a1620; color: var(--bad); }
+  .hidden { display: none !important; }
+  .badge {
+    display: inline-block; background: var(--panel2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 999px; padding: 3px 10px; font-size: 0.72rem; margin-left: 8px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 10px 0 30px; }
+  @media (max-width: 560px) {
+    .grid-nav { grid-template-columns: repeat(6, 1fr); }
+    header { padding: 18px 16px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>OTCA</span> Mock Exam</h1>
+  <div class="badge">60 Questions · Randomized Each Attempt</div>
+</header>
+
+<div class="container">
+
+  <div id="start-screen" class="panel">
+    <h2>Ready to test your OpenTelemetry knowledge?</h2>
+    <p>
+      This mock exam draws <b>60 questions at random from a large question pool</b> every time you
+      start, so repeating the exam won't mean memorizing answers. Questions are harder and more
+      scenario-based, covering SDK/API internals, Collector configuration, sampling, and
+      pipeline troubleshooting.
+    </p>
+    <p>The question mix matches the official OTCA exam blueprint by domain weight:</p>
+    <table class="domain-table">
+      <tr><th>Domain</th><th>Official Weight</th><th>Questions in this exam</th></tr>
+      <tr><td>Fundamentals of Observability</td><td>18%</td><td id="q-fund">10</td></tr>
+      <tr><td>The OpenTelemetry API and SDK</td><td>46%</td><td id="q-api">28</td></tr>
+      <tr><td>The OpenTelemetry Collector</td><td>26%</td><td id="q-col">16</td></tr>
+      <tr><td>Maintaining &amp; Debugging Pipelines</td><td>10%</td><td id="q-maint">6</td></tr>
+    </table>
+    <p>You have <b>45 minutes</b>. A passing score is typically <b>75%</b> (45/60). Good luck!</p>
+    <button class="btn-primary" id="start-btn">Start Exam</button>
+  </div>
+
+  <div id="quiz-screen" class="panel hidden">
+    <div class="top-bar">
+      <div class="stat">⏱ <span id="timer">45:00</span></div>
+      <div class="stat">Score so far: <b id="live-score">0</b>/<span id="live-total">60</span></div>
+      <div class="stat">Question <b id="q-num">1</b> / 60</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+    <div class="q-index" id="q-category"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div class="explain" id="explain"></div>
+    <div class="q-index" style="margin-top:10px;">Keyboard shortcuts: press <b>1-4</b> to answer, <b>→</b> for next question, <b>←</b> for previous</div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" id="prev-btn">← Previous</button>
+      <button class="btn-ghost" id="flag-btn">🚩 Flag for review</button>
+      <button class="btn-primary" id="next-btn">Next →</button>
+    </div>
+
+    <div class="grid-nav" id="grid-nav"></div>
+    <div class="nav-row">
+      <button class="btn-ghost" id="quit-btn">Exit Exam</button>
+      <button class="btn-primary" id="submit-btn">Submit Exam</button>
+    </div>
+  </div>
+
+  <div id="result-screen" class="panel hidden">
+    <h2>Exam Results</h2>
+    <div class="score-circle">
+      <div class="pct" id="final-pct">0%</div>
+      <div class="lbl" id="final-frac">0/60</div>
+    </div>
+    <p id="pass-msg"></p>
+    <div class="nav-row" style="justify-content:center;">
+      <button class="btn-secondary" id="review-btn">Review Answers</button>
+      <button class="btn-primary" id="retry-btn">Retake Exam (new random set)</button>
+    </div>
+    <div class="review-list hidden" id="review-list"></div>
+  </div>
+
+</div>
+
+<footer>Not affiliated with the OpenTelemetry project, CNCF, or the Linux Foundation. For self-study purposes only.</footer>
+
+<script>
+/* Domain codes: FUND = Fundamentals of Observability, API = OpenTelemetry API and SDK,
+   COL = OpenTelemetry Collector, MAINT = Maintaining & Debugging Observability Pipelines.
+   Pool weighting mirrors the official OTCA blueprint (18% / 46% / 26% / 10%). */
+const POOL = [
+{d:"FUND",q:"Which combination of signals is generally considered the core pillars of observability that OpenTelemetry standardizes?",o:["Traces, Metrics, Logs","Alerts, Dashboards, SLOs","Uptime, Latency, Throughput only","Events, Incidents, Postmortems"],a:0,e:"OpenTelemetry standardizes traces, metrics, and logs as its core telemetry signals."},
+{d:"FUND",q:"A team wants to know 'why' a specific request was slow, not just 'that' requests are slow on average. Which signal is best suited to answer this?",o:["Traces, because they capture the exact path and timing of an individual request","Metrics, because aggregates are more precise","Logs alone, without any trace correlation","Resource attributes only"],a:0,e:"Traces capture the causal, per-request path through a system, making them ideal for root-causing individual slow requests."},
+{d:"FUND",q:"What is the key difference between observability and traditional monitoring?",o:["Observability lets you ask arbitrary new questions about system behavior from existing telemetry, while monitoring answers pre-defined known questions","They are identical concepts with different names","Monitoring requires more telemetry data than observability","Observability only applies to metrics"],a:0,e:"Observability emphasizes the ability to explore unknown-unknowns using rich telemetry, whereas monitoring typically tracks known failure modes via fixed dashboards/alerts."},
+{d:"FUND",q:"Which of the following is NOT typically considered raw telemetry data in OpenTelemetry?",o:["A Service Level Objective (SLO) target","A span","A metric data point","A log record"],a:0,e:"An SLO is a derived business/reliability target built from telemetry, not raw telemetry data itself."},
+{d:"FUND",q:"Why is cardinality an important concept when designing telemetry data?",o:["High-cardinality attributes can explode storage costs and query performance, especially in metrics","Cardinality only affects log file size","Cardinality is irrelevant to cost or performance","Cardinality determines trace sampling rates directly"],a:0,e:"Unbounded or high-cardinality attribute values (e.g., user IDs as metric labels) can cause massive increases in the number of unique time series, straining backends."},
+{d:"FUND",q:"Which statement about the relationship between telemetry data and a Resource in OpenTelemetry is most accurate?",o:["The Resource describes the entity (service, host, process) that produced the telemetry, and is attached to it as context","The Resource is a type of span event","The Resource replaces the need for attributes on spans","The Resource is only used for logs"],a:0,e:"Resource attributes describe the producing entity and accompany all signals emitted from that source."},
+{d:"FUND",q:"Which statement about telemetry data volume trade-offs is most accurate?",o:["More granular telemetry improves debugging fidelity but increases cost and storage, requiring sampling or aggregation strategies","Telemetry volume has no bearing on system cost","Only logs need volume management, not traces or metrics","Higher volume telemetry is always free with OpenTelemetry"],a:0,e:"Observability teams must balance data fidelity against processing/storage/network costs, commonly via sampling, filtering, and aggregation."},
+{d:"FUND",q:"An 'event' in the general observability sense, as distinct from a metric, is best described as:",o:["A discrete occurrence with contextual detail at a point in time, as opposed to a continuously aggregated numeric value","A type of exporter","A required field on every Resource","A synonym for a trace"],a:0,e:"Events capture discrete occurrences with rich context (like log records or span events), contrasting with metrics, which are aggregated numeric measurements."},
+{d:"FUND",q:"Which telemetry signal is most naturally suited to answering 'How many requests failed in the last 5 minutes across the whole fleet?'",o:["Metrics, since they are optimized for efficient aggregation over time and across dimensions","Traces, since each one only covers a single request","Logs, since they cannot be aggregated","Baggage, since it propagates across services"],a:0,e:"Metrics are designed for efficient, aggregated numerical answers to fleet-wide questions over time windows."},
+{d:"FUND",q:"What is a common pitfall when correlating telemetry data across signals?",o:["Failing to propagate and attach consistent identifiers (like trace/span IDs) across logs, metrics exemplars, and traces","Attaching too many identifiers to spans","Using Resource attributes at all","Avoiding semantic conventions"],a:0,e:"Without shared identifiers (trace/span IDs, resource attributes), correlating signals from the same request becomes difficult or impossible."},
+{d:"FUND",q:"Which best explains the term 'wide events' or highly structured logs in modern observability practice?",o:["Log records enriched with many contextual attributes (like a span) rather than a simple unstructured text line","Logs that span multiple files","Logs replicated across multiple regions","Logs that are intentionally verbose and repetitive"],a:0,e:"Wide/structured events attach rich, queryable context (similar to span attributes) instead of relying on plain text parsing."},
+{d:"FUND",q:"Telemetry pipelines commonly separate 'collection' from 'analysis'. Why is this separation valuable?",o:["It allows telemetry producers to remain agnostic of the backend, and lets backends evolve independently of instrumentation","It removes the need for a Resource","It eliminates the need for context propagation","It guarantees zero data loss"],a:0,e:"Decoupling producers (SDKs/agents) from backends via a vendor-neutral protocol/collector is central to OpenTelemetry's vendor-neutral design."},
+{d:"FUND",q:"Which is the most accurate description of a 'measurement' in the context of telemetry data?",o:["A single recorded value captured by an instrument at a point in time, before aggregation","The final aggregated output sent to a backend","A synonym for Resource","A type of span link"],a:0,e:"A measurement is the raw value recorded via an instrument API call; aggregation later combines measurements into exported data points."},
+{d:"FUND",q:"A service emits detailed per-request traces but no metrics. Which limitation will the team most likely encounter?",o:["Difficulty answering aggregate questions (e.g., overall error rate) efficiently at scale, since traces are typically sampled","Inability to know the service name","Inability to instrument HTTP calls","Traces cannot include timestamps"],a:0,e:"Because traces are often sampled and per-request, they are inefficient for fleet-wide aggregate answers compared to metrics."},
+{d:"FUND",q:"Which OpenTelemetry semantic convention stability levels exist for defining attributes?",o:["Experimental (development) and Stable","Alpha, Beta, and GA only","Deprecated and Removed only","Public and Private"],a:0,e:"Semantic conventions are marked with stability levels, primarily experimental/development and stable, guiding compatibility expectations."},
+{d:"FUND",q:"What is the purpose of a Schema URL attached to telemetry data?",o:["To indicate which version of semantic conventions was used, enabling consumers to interpret or transform attributes correctly","To specify the exporter endpoint","To define the sampling ratio","To store the trace ID format"],a:0,e:"The Schema URL identifies the semantic convention schema version in effect, supporting schema transformation across versions."},
+{d:"FUND",q:"Which namespace prefix is used by semantic conventions for HTTP client and server attributes?",o:["http.","web.","request.","net.rpc."],a:0,e:"HTTP semantic conventions use the http. namespace, e.g., http.request.method, http.response.status_code."},
+{d:"FUND",q:"According to semantic conventions, which attribute identifies the database system being used (e.g., postgresql, mysql)?",o:["db.system","db.name","db.connection","db.instance"],a:0,e:"db.system identifies the specific database technology; db.name/db.namespace identifies the specific database instance/name."},
+{d:"FUND",q:"Why should instrumentation authors prefer using semantic conventions rather than inventing custom attribute names?",o:["It ensures interoperability so tools and backends can recognize and process common attributes consistently across instrumentation from different vendors/languages","Semantic conventions are mandatory for compilation","Custom attributes are forbidden by the OpenTelemetry API","Semantic conventions reduce the number of spans created"],a:0,e:"Consistent, standardized attribute names allow cross-vendor tools to understand telemetry without custom mapping per library."},
+{d:"FUND",q:"Which semantic convention attribute set would you expect on a span representing a messaging system's publish operation?",o:["messaging.system, messaging.destination.name, messaging.operation","http.method, http.route","db.system, db.statement","rpc.system, rpc.method"],a:0,e:"Messaging semantic conventions define attributes like messaging.system and messaging.destination.name for producer/consumer spans."},
+{d:"FUND",q:"What does the semantic convention attribute rpc.system typically capture?",o:["The RPC framework in use, such as grpc","The response status code","The name of the calling service","The network peer address"],a:0,e:"rpc.system identifies the remote procedure call framework/protocol, such as grpc or apache_dubbo."},
+{d:"FUND",q:"Which best explains why semantic conventions evolve and sometimes rename attributes (e.g., net.peer.name to server.address)?",o:["The community iterates conventions toward more general, consistent naming across domains as adoption and understanding grow","Because they are randomly regenerated each release","Because the OpenTelemetry API requires renaming yearly","Because renaming has no functional purpose"],a:0,e:"Semantic conventions are versioned and refined over time for better consistency and generality; schema transformation helps manage these changes."},
+{d:"FUND",q:"Which attribute would be considered a violation of semantic convention best practice for a metric label?",o:["A raw user ID with unbounded unique values","http.request.method","db.system","a fixed environment name like 'production'"],a:0,e:"Using unbounded high-cardinality values like user IDs as metric attributes violates best practices and risks cardinality explosion."},
+{d:"FUND",q:"What role do semantic conventions play in cross-vendor dashboard and alerting compatibility?",o:["They allow dashboards and alerts built against standard attribute names to work across telemetry from different instrumented libraries and vendors","They eliminate the need for dashboards","They are only relevant to trace exporters","They only apply within a single programming language"],a:0,e:"Standardized names mean a dashboard querying http.response.status_code works regardless of which library or vendor generated the span."},
+{d:"FUND",q:"Which of these is an example of a resource semantic convention rather than a span semantic convention?",o:["service.name","http.request.method","db.statement","messaging.operation"],a:0,e:"service.name is a Resource attribute identifying the producing service, distinct from span-level operation attributes."},
+{d:"FUND",q:"A span attribute named 'network.protocol.version' following semantic conventions is best classified under which domain?",o:["General network attributes shared across HTTP, RPC, and messaging conventions","Database conventions only","Fundamentals of instrumentation testing","Resource-only attributes"],a:0,e:"network.* attributes are common/general conventions reused across various semantic convention domains like HTTP and messaging."},
+{d:"FUND",q:"Why might an organization define custom semantic conventions internally in addition to using OpenTelemetry's standard ones?",o:["To capture business- or organization-specific context not covered by standard conventions, while still following the same naming/namespacing principles","Because OpenTelemetry disallows any non-standard attributes","Because custom attributes automatically override semantic conventions","Because the OpenTelemetry Collector rejects unknown attributes"],a:0,e:"Standard conventions cover common cases, but organizations often add their own attributes for business context following similar naming discipline."},
+{d:"FUND",q:"Which is true regarding the stability guarantee of 'stable' semantic conventions?",o:["Stable semantic conventions will not have breaking changes to their names or meanings, providing long-term compatibility","Stable means the attribute is required on every span","Stable means the attribute cannot be later deprecated ever","Stable applies only to metrics, never to traces"],a:0,e:"Once marked stable, semantic conventions commit to backward compatibility, unlike experimental/development conventions which may still change."},
+{d:"FUND",q:"What is the primary distinction between manual instrumentation and library (native) instrumentation?",o:["Manual instrumentation is added explicitly by the application developer, while library instrumentation is built into a library/framework by its maintainers","Manual instrumentation cannot produce traces","Library instrumentation always requires a Collector","There is no distinction; they are the same thing"],a:0,e:"Library/native instrumentation ships within the library itself using the OTel API; manual instrumentation is added by the application author separately."},
+{d:"FUND",q:"What is the main advantage of using automatic (zero-code) instrumentation agents in production rollouts?",o:["Faster time-to-value since common libraries get instrumented without source code changes","They produce more accurate traces than manual instrumentation always","They eliminate the need for a Resource","They are required to use OTLP"],a:0,e:"Zero-code instrumentation accelerates adoption by automatically hooking into well-known libraries/frameworks without modifying source code."},
+{d:"FUND",q:"Which scenario is best suited for manual instrumentation rather than relying solely on automatic instrumentation?",o:["Capturing custom business logic details, such as a specific calculation result or domain-specific span attribute","Instrumenting a well-known HTTP framework already supported by an auto-instrumentation agent","Propagating W3C trace context over HTTP by default","Detecting resource attributes for cloud provider metadata"],a:0,e:"Automatic instrumentation covers common framework-level telemetry, but business-specific context typically requires manual instrumentation calls."},
+{d:"FUND",q:"What is an Instrumentation Scope used for?",o:["Identifying the name and version of the instrumentation library or code producing a piece of telemetry, separate from the Resource","Defining sampling rules","Configuring exporters","Storing baggage entries"],a:0,e:"Instrumentation Scope records the name/version of the specific instrumentation (e.g., 'io.opentelemetry.instrumentation.http') generating spans/metrics/logs."},
+{d:"FUND",q:"Why is it best practice for instrumentation libraries to depend only on the OpenTelemetry API rather than the SDK?",o:["So the library doesn't force a specific SDK configuration onto consuming applications, keeping it lightweight and decoupled","Because SDKs are always slower than APIs","Because APIs cannot emit telemetry at all","Because the SDK is deprecated"],a:0,e:"Depending on the API keeps libraries portable; if no SDK is configured by the application, API calls simply no-op."},
+{d:"FUND",q:"Which best describes 'instrumentation coverage' as an evaluation criterion for an observability rollout?",o:["The proportion of critical code paths and services that emit meaningful telemetry","The number of Collector instances deployed","The percentage of traces that are sampled","The number of exporters configured"],a:0,e:"Instrumentation coverage measures how comprehensively critical paths are instrumented, a key factor in observability effectiveness."},
+{d:"FUND",q:"A team upgrades a library and telemetry attribute names silently change. What OpenTelemetry mechanism helps manage this?",o:["Semantic convention schema versioning and Schema URLs","Sampling ratio adjustment","Increasing batch processor timeout","Switching exporters"],a:0,e:"Schema URLs and versioned semantic conventions let consumers detect and adapt to attribute naming changes across versions."},
+{d:"FUND",q:"Which is a valid reason to disable or reduce automatic instrumentation for a specific library in production?",o:["Excessive telemetry volume/noise from a very hot code path impacting performance or cost","Automatic instrumentation is incompatible with the OpenTelemetry API by design","Automatic instrumentation cannot be configured at all","There is no valid reason to ever disable it"],a:0,e:"High-frequency operations may generate excessive telemetry; selectively disabling or sampling that instrumentation can control cost/overhead."},
+{d:"FUND",q:"Which best describes 'exemplars' in the context of metrics analysis?",o:["Sample trace references attached to metric data points, linking an aggregated measurement back to an individual representative trace","A synonym for span links","Metric values without any timestamp","A required field on every span"],a:0,e:"Exemplars attach representative trace IDs to histogram/metric data points, enabling drill-down from an aggregate metric into a specific trace."},
+{d:"FUND",q:"Which analysis technique benefits most from having consistent trace IDs propagated into log records?",o:["Correlating logs with the exact request/trace that produced them for root-cause analysis","Calculating CPU utilization","Computing memory allocation rates","Determining Collector deployment topology"],a:0,e:"Embedding trace/span IDs in logs allows jumping directly from a log line to its corresponding distributed trace."},
+{d:"FUND",q:"The RED method (Rate, Errors, Duration) is most naturally measured using which OpenTelemetry signal?",o:["Metrics","Logs only","Baggage","Span Links"],a:0,e:"RED method metrics (request rate, error rate, duration) are typically implemented as counters and histograms."},
+{d:"FUND",q:"What is a common outcome of adopting distributed tracing across a microservice architecture?",o:["Improved ability to pinpoint which service in a request chain introduced latency or errors","Elimination of the need for logging entirely","Automatic reduction of infrastructure cost","Removal of the need for a Resource"],a:0,e:"Tracing reveals the full request path across services, helping isolate where latency or failures originate."},
+{d:"FUND",q:"Why might a team rely on both metrics and traces rather than just one signal for incident response?",o:["Metrics quickly reveal that a problem exists at scale, while traces help identify the specific root cause of individual failing requests","Traces are always cheaper to store than metrics","Metrics cannot show error rates","Traces are required to compute uptime percentages"],a:0,e:"Metrics provide fast, cheap, aggregate detection of anomalies; traces provide the detailed causal path for root-causing specific issues."},
+{d:"FUND",q:"Which statement best reflects the goal of 'reducing mean time to resolution (MTTR)' through observability tooling?",o:["Providing correlated, contextual telemetry so engineers can quickly move from symptom (alert) to root cause","Increasing the number of dashboards regardless of usefulness","Maximizing the number of exporters configured","Disabling sampling entirely"],a:0,e:"Rich correlated telemetry (metrics to traces to logs) reduces the investigative time needed to resolve incidents."},
+{d:"FUND",q:"A dashboard shows elevated latency but no errors. Which analysis path best uses OpenTelemetry data to investigate further?",o:["Drill into traces during the latency spike window to see which span(s) in the request path are consuming the most time","Immediately increase the sampling ratio to 100 percent permanently","Disable all instrumentation to reduce noise","Assume it is a false positive and ignore it"],a:0,e:"Traces let you decompose an end-to-end latency increase into per-span durations to find the specific bottleneck."},
+{d:"FUND",q:"Which analysis benefit does span attribute standardization on error status provide?",o:["Consistent identification and aggregation of failed operations across many different services and languages","Faster network transmission of spans","Reduced trace ID collision rates","Automatic retries of failed requests"],a:0,e:"Standardized error/status conventions let tools uniformly detect and aggregate failures regardless of the originating service's language or library."},
+{d:"FUND",q:"Which best describes an 'outcome-driven' approach to designing telemetry, as opposed to instrumenting everything possible?",o:["Prioritizing instrumentation that answers specific, valuable operational or business questions rather than maximizing data volume","Recording every possible attribute on every span regardless of usefulness","Avoiding any custom attributes","Disabling all sampling to capture 100 percent of data"],a:0,e:"Effective observability design starts from the questions/outcomes needed, then instruments accordingly, avoiding unnecessary telemetry bloat."},
+{d:"FUND",q:"Which is the most likely negative outcome of over-instrumenting a hot path without sampling or filtering?",o:["Excessive overhead, cost, and potential performance degradation from telemetry generation and export","Improved application throughput","Reduced storage costs","Elimination of the need for a Collector"],a:0,e:"Uncontrolled, excessive instrumentation on high-throughput paths can add meaningful CPU, memory, and network overhead."},
+{d:"FUND",q:"Which best explains the value of long-term trend analysis on OpenTelemetry metrics, versus only real-time alerting?",o:["Trend analysis reveals gradual degradations (e.g., slow memory growth) that real-time alerts on fixed thresholds might miss","Trend analysis is not possible with OpenTelemetry metrics","Trend analysis requires disabling all sampling","Trend analysis only applies to trace data"],a:0,e:"Slow, gradual regressions are often invisible to threshold alerts but become clear when analyzing metrics over longer historical windows."},
+{d:"FUND",q:"A team wants to reduce alert fatigue while preserving the ability to deeply investigate incidents. Which telemetry strategy fits best?",o:["Use metrics with well-tuned thresholds for alerting, and rely on traces/logs for deep investigation once alerted","Alert directly on every individual span","Disable metrics and rely solely on manual log review","Sample traces at 100 percent and ignore metrics entirely"],a:0,e:"Metrics are well suited for efficient alerting thresholds, while traces and logs provide the deep-dive detail needed after an alert fires."},
+{d:"FUND",q:"How does correlating deployment/version resource attributes with error-rate metrics help outcome analysis?",o:["It helps identify whether a new deployment or version introduced a regression","It has no analytical value","It is only useful for billing purposes","It replaces the need for traces entirely"],a:0,e:"Resource attributes like service.version let teams correlate metric/error trends with specific deployments to spot regressions."},
+{d:"FUND",q:"Which best describes why instrumenting error paths (not just happy paths) is important for outcome-driven observability?",o:["Failures often carry the most operationally valuable signal, and missing error telemetry blinds teams to the issues they most need to see","Error paths never occur in production so they are low priority","Instrumenting error paths always doubles telemetry cost with no benefit","Error paths cannot be captured by spans, only by logs"],a:0,e:"Errors are frequently the highest-value telemetry for incident response, so they should be prioritized in instrumentation coverage."},
+{d:"API",q:"Which of the following are the three main components of the OpenTelemetry Metrics data model?",o:["Instrument, Measurement, Aggregation","Span, Event, Link","Receiver, Processor, Exporter","Resource, Scope, Schema"],a:0,e:"The metrics data model centers on instruments (report data), measurements (individual values), and aggregation (combining values over time into data points)."},
+{d:"API",q:"Which field in a span uniquely distinguishes it from every other span in a trace?",o:["SpanId","TraceId","ParentSpanId","Resource"],a:0,e:"SpanId uniquely identifies a span, while TraceId is shared by all spans in the same trace."},
+{d:"API",q:"A span with SpanKind=CLIENT is typically paired with a corresponding span of which kind on the receiving service?",o:["SERVER","INTERNAL","PRODUCER","CONSUMER"],a:0,e:"CLIENT/SERVER spans represent a synchronous request/response pair, e.g., an outgoing HTTP call and its handling on the server."},
+{d:"API",q:"Which SpanKind values are conventionally paired for asynchronous messaging patterns?",o:["PRODUCER and CONSUMER","CLIENT and SERVER","INTERNAL and INTERNAL","SERVER and SERVER"],a:0,e:"PRODUCER/CONSUMER SpanKinds represent asynchronous message publishing and processing, as opposed to synchronous CLIENT/SERVER RPCs."},
+{d:"API",q:"What data structure connects two spans that are causally related but not in a direct parent-child hierarchy?",o:["A Span Link","A Span Event","A Baggage entry","A Resource attribute"],a:0,e:"Links reference other spans (potentially in different traces) that are related but do not fit the strict parent-child model, e.g., batched operations."},
+{d:"API",q:"Which of the following is an accurate description of a Span Event's structure?",o:["A name, timestamp, and optional set of attributes recorded within a span's lifetime","A standalone signal exported independently of any span","A required field on every metric","A type of exporter configuration"],a:0,e:"Span Events are timestamped, named occurrences (with optional attributes) recorded inside a span, e.g., an exception event."},
+{d:"API",q:"When an exception is recorded on a span using recordException, which additional step is commonly needed to reflect the failure in the span's overall outcome?",o:["Explicitly setting the span's Status to Error, since recording an exception event does not automatically set status","Ending the span twice","Creating a new trace","Adding the exception as Baggage"],a:0,e:"Recording an exception event captures details, but the SDK does not automatically flip span Status to Error; this typically must be set explicitly."},
+{d:"API",q:"What are the three possible values of a Span's Status field?",o:["Unset, Ok, Error","Pending, Success, Failure","Active, Closed, Archived","Info, Warn, Error"],a:0,e:"Span Status has exactly three states: Unset (default/no assertion), Ok, and Error."},
+{d:"API",q:"Which of these best describes the 'sampled' bit in a SpanContext's TraceFlags?",o:["It indicates whether this span (and its trace) is intended to be recorded/exported downstream","It indicates whether the span already ended","It stores the exporter's HTTP status code","It defines the span's SpanKind"],a:0,e:"The sampled flag in TraceFlags communicates the sampling decision, propagated so downstream services record consistently."},
+{d:"API",q:"What is the primary difference between the Counter and Histogram instrument types?",o:["Counter records a single monotonically increasing sum; Histogram records the distribution of individual measurement values into buckets","Counter is asynchronous only; Histogram is synchronous only","Histogram cannot record negative values while Counter can","There is no meaningful difference"],a:0,e:"Counter aggregates a running monotonic sum; Histogram captures the statistical distribution (e.g., percentiles) of recorded values."},
+{d:"API",q:"An Observable (asynchronous) Gauge is most appropriate for measuring which of the following?",o:["Current queue depth read via a callback at collection time","A monotonically increasing request count","The duration of an individual span","A propagated baggage value"],a:0,e:"Observable Gauges report a current, non-additive state (like queue depth or CPU usage) via a registered callback."},
+{d:"API",q:"Which metric instrument would be most appropriate for tracking the number of open connections that can both increase and decrease?",o:["UpDownCounter","Counter","Histogram","Gauge only, never UpDownCounter"],a:0,e:"UpDownCounter supports both increments and decrements, appropriate for values like open connection counts."},
+{d:"API",q:"What does 'temporality' describe in the OpenTelemetry metrics data model?",o:["Whether reported aggregation values are cumulative since a start time, or represent deltas since the last collection","The order in which spans are created","The frequency of trace sampling decisions","The unit of measurement for a metric"],a:0,e:"Temporality (Cumulative vs. Delta) defines how aggregation values behave/reset across collection intervals, which downstream systems must interpret correctly."},
+{d:"API",q:"Which statement about the default temporality preference of most OpenTelemetry metric exporters is accurate?",o:["It is configurable, and different exporters (e.g., Prometheus vs. OTLP) may prefer different default temporalities","All exporters are hard-coded to use Delta temporality","Temporality cannot be changed once an SDK is initialized","Only Histogram instruments have configurable temporality"],a:0,e:"Metric exporters can define a preferred temporality (e.g., Prometheus commonly uses Cumulative, some push-based systems prefer Delta), and this is configurable in the SDK's MetricReader."},
+{d:"API",q:"What is the purpose of a View in the OpenTelemetry Metrics SDK?",o:["To create new trace spans","To customize instrument aggregation, renaming, attribute filtering, or to drop instruments entirely before export","To define Collector receivers","To manage baggage propagation"],a:1,e:"Views let SDK users override default aggregation, rename instruments/attributes, or exclude specific instruments from export."},
+{d:"API",q:"Which of the following is a valid reason to configure an explicit bucket boundary View on a Histogram instrument?",o:["To tailor bucket resolution to the expected latency distribution of a specific operation for more meaningful percentiles","To convert the Histogram into a Counter","To disable export of the instrument entirely","Bucket boundaries cannot be customized in OpenTelemetry"],a:0,e:"Custom bucket boundaries via a View let teams get meaningful percentile resolution for their specific latency ranges."},
+{d:"API",q:"Which of these is true regarding attribute limits enforced by default in the SDK (e.g., max attribute count per span)?",o:["The SDK enforces configurable default limits on attribute count and length to bound memory usage and payload size","There are no default limits; attribute counts are unbounded by design","Limits can only be configured at compile time, never at runtime","Limits only apply to metrics, never to spans"],a:0,e:"SDKs commonly enforce configurable default limits (e.g., 128 attributes per span) to prevent unbounded memory growth."},
+{d:"API",q:"What happens to attributes added beyond the configured maximum attribute count limit on a span?",o:["They are dropped, and the span records a dropped-attribute count","They cause the SDK to throw a fatal, unrecoverable error","They are automatically merged with existing attributes","They are silently converted into Span Events instead"],a:0,e:"Excess attributes are dropped and the span tracks how many were dropped, rather than failing or growing unbounded."},
+{d:"API",q:"Which LogRecord field captures the standardized numeric severity value defined by the Logs Data Model?",o:["SeverityNumber","Body","InstrumentationScope","TraceFlags"],a:0,e:"SeverityNumber is a normalized 1-24 severity scale; SeverityText carries the original textual level (e.g., 'WARN')."},
+{d:"API",q:"How does a LogRecord typically get correlated with an active trace?",o:["By populating its TraceId and SpanId fields from the currently active span context at the time the log was emitted","By matching timestamps exactly between the log and the span","By storing the trace ID inside the log Body as free text only","Correlation between logs and traces is not possible in OpenTelemetry"],a:0,e:"Log bridges/appenders typically copy the active span's TraceId/SpanId onto the LogRecord for correlation."},
+{d:"API",q:"What is the role of a Log Appender/Bridge in OpenTelemetry's logging support?",o:["To convert log records produced by existing logging libraries into the OpenTelemetry Log Data Model without rewriting application logging code","To replace the OpenTelemetry API entirely","To generate spans from log statements automatically","To store logs directly in the Collector's memory"],a:0,e:"Bridges hook into popular logging frameworks (Log4j, Winston, etc.) to emit OTel-shaped LogRecords while preserving existing logging call sites."},
+{d:"API",q:"Which best describes the relationship between the OpenTelemetry API and SDK packages?",o:["The API defines stable interfaces for instrumentation; the SDK provides the configurable implementation (processors, exporters, samplers) behind those interfaces","The API and SDK are the same package under different names","The SDK must be imported by every instrumented library directly","The API is only used for testing purposes"],a:0,e:"This separation allows libraries to depend on the lightweight, stable API while applications choose and configure the SDK."},
+{d:"API",q:"If an application never registers/configures an SDK, what is the behavior of OpenTelemetry API calls made by instrumented libraries?",o:["They become no-ops, incurring minimal overhead and producing no exported telemetry","They throw a runtime exception on every call","They buffer indefinitely until an SDK is later configured","They fall back to writing telemetry to stdout automatically"],a:0,e:"Without a configured SDK, the default no-op implementations behind the API interfaces make calls essentially free and silent."},
+{d:"API",q:"What is the responsibility of a TracerProvider?",o:["Serving as the SDK's entry point for obtaining named/versioned Tracer instances that create spans","Storing exported metric data points","Managing the Collector's receiver configuration","Handling context propagation exclusively"],a:0,e:"TracerProvider is the top-level SDK object from which instrumentation obtains a Tracer to create spans."},
+{d:"API",q:"Why does the Tracer API require a name (and optionally a version) when obtained from a TracerProvider?",o:["To populate the Instrumentation Scope on emitted spans, identifying which instrumentation library produced them","Because the name determines the trace sampling rate","Because the name is used as the exporter endpoint","Because it sets the Resource's service.name"],a:0,e:"The name/version passed to getTracer() becomes the Instrumentation Scope attached to spans it creates."},
+{d:"API",q:"Which SDK component is responsible for reacting to span lifecycle events (start/end) and forwarding completed spans toward an exporter?",o:["SpanProcessor","SpanContext","Sampler","Propagator"],a:0,e:"SpanProcessor implements onStart/onEnd hooks and is commonly used (e.g., BatchSpanProcessor) to batch and forward spans to exporters."},
+{d:"API",q:"What is the key operational difference between SimpleSpanProcessor and BatchSpanProcessor?",o:["SimpleSpanProcessor exports each span synchronously as it ends; BatchSpanProcessor buffers spans and exports them asynchronously in batches","BatchSpanProcessor can only be used with metrics","SimpleSpanProcessor requires a Collector while BatchSpanProcessor does not","They both export spans identically but differ in naming only"],a:0,e:"SimpleSpanProcessor is useful for debugging/testing due to synchronous, immediate export; BatchSpanProcessor is recommended in production for efficiency."},
+{d:"API",q:"Which SDK component decides, for a given span, whether it should be recorded and/or exported?",o:["Sampler","Exporter","Resource Detector","Propagator"],a:0,e:"The Sampler makes the record/export decision for a span, typically evaluated when the span starts."},
+{d:"API",q:"What does the ParentBased sampler do when a span has no parent context (i.e., it is a root span)?",o:["It delegates to a configured root sampler (e.g., an internally wrapped TraceIdRatioBased or AlwaysOn sampler)","It always samples the span regardless of configuration","It always drops the span since there is no parent","It throws an error because ParentBased requires a parent"],a:0,e:"ParentBased wraps a root sampler used specifically when no parent span context exists, while otherwise respecting the parent's decision."},
+{d:"API",q:"Which sampler makes its decision deterministically based on a function of the trace ID and a configured sampling ratio?",o:["TraceIdRatioBased","AlwaysOn","AlwaysOff","ParentBased alone, without any wrapped sampler"],a:0,e:"TraceIdRatioBased computes a deterministic threshold-based decision from the trace ID bytes, ensuring consistency across services for the same trace."},
+{d:"API",q:"What is the main functional difference between head-based and tail-based sampling from an SDK perspective?",o:["Head-based sampling decisions are made by the SDK's Sampler at span start, before the outcome (error/latency) is known; tail-based decisions require seeing the full completed trace, usually in a Collector","Head-based sampling can only be implemented in the Collector, never the SDK","Tail-based sampling happens before a span starts","There is no meaningful difference between the two approaches"],a:0,e:"Head sampling is an early SDK-side decision; tail sampling needs the complete trace and is typically implemented downstream (e.g., Collector tail_sampling processor)."},
+{d:"API",q:"Which of the following is a valid use case for implementing a custom Sampler?",o:["Sampling more aggressively for high-volume, low-value health-check endpoints while retaining full sampling for critical business transactions","Changing the wire format of exported spans","Modifying Resource attributes after span creation","Registering a new Collector receiver"],a:0,e:"Custom samplers can apply business logic (e.g., span name or attribute-based rules) to differentially sample traffic."},
+{d:"API",q:"What is the purpose of implementing a custom SpanExporter?",o:["To define how completed spans are serialized and sent to a specific, possibly proprietary, backend not covered by built-in exporters","To change how spans are sampled","To alter the SpanContext propagation format","To register new metric instruments"],a:0,e:"Custom exporters implement the export/shutdown interface to send spans to arbitrary destinations."},
+{d:"API",q:"Why might a team implement a custom SpanProcessor rather than only relying on built-in Simple/BatchSpanProcessor?",o:["To apply custom logic on every span at start/end, such as enriching attributes or filtering/redacting sensitive data before export","Because custom SpanProcessors are required to use the OTLP exporter","Because built-in processors cannot batch spans","Because SpanProcessors control sampling ratios exclusively"],a:0,e:"Custom SpanProcessors can enrich, filter, or redact span data at the SDK layer before spans reach an exporter."},
+{d:"API",q:"Which extension point would you use to support a brand-new context propagation header format not covered by W3C Trace Context or B3?",o:["A custom TextMapPropagator implementation","A custom Sampler","A custom MetricReader","A custom LogRecordProcessor"],a:0,e:"TextMapPropagator defines inject/extract logic for a specific header format; a custom implementation supports proprietary or legacy formats."},
+{d:"API",q:"What is the benefit of the OpenTelemetry SDK's plugin-style architecture (samplers, processors, exporters, propagators all pluggable)?",o:["It lets users customize behavior at well-defined extension points without modifying the core API or SDK internals","It requires recompiling the OpenTelemetry API for every change","It only supports a single fixed pipeline configuration","It prevents any use of built-in components once customized"],a:0,e:"The composable, pluggable design allows mixing built-in and custom components freely at defined extension points."},
+{d:"API",q:"Which of the following would be a correct way to compose multiple SpanProcessors in an SDK TracerProvider?",o:["Registering multiple SpanProcessors, each of which receives onStart/onEnd callbacks independently, e.g., one for enrichment and one for batching/export","SpanProcessors cannot be composed; only one is allowed per TracerProvider","By chaining them inside a single Sampler","By registering them as Collector receivers"],a:0,e:"TracerProviders support registering multiple SpanProcessors, each independently processing every span's lifecycle events."},
+{d:"API",q:"Which extension mechanism allows adding entirely new export destinations for metrics without modifying the Metrics API itself?",o:["Implementing a custom MetricExporter (or MetricReader integration)","Modifying the Resource schema","Changing the TraceIdRatioBased sampler","Adding a new SpanKind"],a:0,e:"Custom MetricExporters plug into the metrics pipeline (via a MetricReader) to send data to new destinations."},
+{d:"API",q:"Which is an appropriate use of a custom Resource Detector?",o:["Populating Resource attributes automatically at startup from a platform-specific source, such as cloud provider metadata endpoints","Changing which spans get sampled","Filtering which log severities are exported","Registering new metric instruments"],a:0,e:"Resource detectors run at SDK startup to populate attributes like cloud.provider or host.id automatically from the runtime environment."},
+{d:"API",q:"Which environment variable is commonly used to set the OTLP exporter endpoint for all signals unless overridden per-signal?",o:["OTEL_EXPORTER_OTLP_ENDPOINT","OTEL_SERVICE_NAME","OTEL_TRACES_SAMPLER","OTEL_RESOURCE_ATTRIBUTES"],a:0,e:"OTEL_EXPORTER_OTLP_ENDPOINT sets a general OTLP endpoint; signal-specific variables like OTEL_EXPORTER_OTLP_TRACES_ENDPOINT override it for traces only."},
+{d:"API",q:"Which environment variable sets arbitrary key-value Resource attributes for an SDK at startup?",o:["OTEL_RESOURCE_ATTRIBUTES","OTEL_SERVICE_NAME","OTEL_PROPAGATORS","OTEL_TRACES_EXPORTER"],a:0,e:"OTEL_RESOURCE_ATTRIBUTES accepts a comma-separated list of key=value pairs merged into the SDK's Resource."},
+{d:"API",q:"Which environment variable configures which context propagators (e.g., tracecontext, baggage, b3) an SDK uses by default?",o:["OTEL_PROPAGATORS","OTEL_TRACES_SAMPLER","OTEL_METRICS_EXPORTER","OTEL_LOG_LEVEL"],a:0,e:"OTEL_PROPAGATORS is a comma-separated list selecting the global propagators to register, e.g., 'tracecontext,baggage'."},
+{d:"API",q:"Which environment variable is used to completely disable the OpenTelemetry SDK at runtime without code changes?",o:["OTEL_SDK_DISABLED","OTEL_TRACES_SAMPLER=always_off","OTEL_EXPORTER_OTLP_ENDPOINT=''","OTEL_METRICS_EXPORTER=none only"],a:0,e:"Setting OTEL_SDK_DISABLED=true turns the SDK into a no-op globally, useful for emergency kill-switches or specific environments."},
+{d:"API",q:"Which environment variable specifically selects the sampler implementation and its argument (e.g., traceidratio with a ratio)?",o:["OTEL_TRACES_SAMPLER and OTEL_TRACES_SAMPLER_ARG","OTEL_EXPORTER_OTLP_PROTOCOL","OTEL_RESOURCE_ATTRIBUTES","OTEL_PROPAGATORS"],a:0,e:"OTEL_TRACES_SAMPLER selects the sampler (e.g., parentbased_traceidratio) and OTEL_TRACES_SAMPLER_ARG supplies its argument, like the ratio."},
+{d:"API",q:"When both a general OTEL_EXPORTER_OTLP_ENDPOINT and a signal-specific OTEL_EXPORTER_OTLP_TRACES_ENDPOINT are set, which takes precedence for trace export?",o:["The signal-specific OTEL_EXPORTER_OTLP_TRACES_ENDPOINT overrides the general one for traces","The general endpoint always wins regardless of signal-specific settings","Both are merged, sending traces to two endpoints simultaneously by default","Neither is used; only programmatic configuration is honored"],a:0,e:"Signal-specific OTLP environment variables take precedence over the general OTEL_EXPORTER_OTLP_ENDPOINT for that signal."},
+{d:"API",q:"Which configuration approach is recommended when an application needs custom logic that cannot be expressed via environment variables alone (e.g., a custom Sampler)?",o:["Programmatic SDK configuration in code, registering custom components directly on the TracerProvider/MeterProvider builders","Only environment variables can configure the SDK; programmatic configuration is not supported","Editing the OpenTelemetry API source code directly","Configuring it exclusively through the Collector"],a:0,e:"Complex or custom logic (custom samplers, processors) typically requires programmatic SDK configuration rather than environment variables alone."},
+{d:"API",q:"What is the effect of setting OTEL_METRICS_EXPORTER=none in an SDK environment configuration?",o:["Metrics collection/export is disabled while traces and logs may still be configured independently","All telemetry signals are disabled entirely","It forces metrics to export via the Collector's Prometheus receiver","It is invalid and will cause a startup failure"],a:0,e:"Signal-specific exporter environment variables allow disabling just one signal (e.g., metrics) while leaving others active."},
+{d:"API",q:"Which OTEL_EXPORTER_OTLP_PROTOCOL values are commonly supported for OTLP export configuration?",o:["grpc, http/protobuf, and http/json","tcp and udp only","ftp and sftp","websocket only"],a:0,e:"OTLP transport protocol configuration commonly accepts grpc, http/protobuf, or http/json as values."},
+{d:"API",q:"How does the SDK typically merge Resource attributes supplied from multiple sources (e.g., resource detectors and OTEL_RESOURCE_ATTRIBUTES)?",o:["It merges them into a single Resource, generally with explicit programmatic or environment-set attributes taking precedence over auto-detected ones on conflicts","It uses only the first source found and ignores the rest","It creates separate, unmerged Resources per source","It always prefers auto-detected values over explicit configuration"],a:0,e:"Resources from multiple sources (detectors, env vars, code) are merged, with defined precedence rules resolving attribute key conflicts."},
+{d:"API",q:"Which part of the OpenTelemetry Tracing API is responsible for making a span the 'current' span for a given execution context?",o:["The Context API, via attaching/activating a Context containing the span","The Sampler","The Resource","The Exporter"],a:0,e:"The Context API manages the active/current span via context attachment, enabling implicit parent-child relationships in nested calls."},
+{d:"API",q:"What is Baggage primarily used for in OpenTelemetry?",o:["Propagating arbitrary user-defined key-value pairs across process boundaries, separate from and in addition to trace context","Storing span attributes permanently in a database","Batching spans before export","Compressing exported telemetry payloads"],a:0,e:"Baggage carries application-defined context (e.g., a user or tenant ID) across service boundaries independently of trace identifiers."},
+{d:"API",q:"Which risk is most associated with overusing Baggage for propagating large or numerous values?",o:["Increased request header size and potential performance/network overhead across every propagated call","Baggage cannot be propagated over HTTP","Baggage values are encrypted and slow to decrypt","Baggage automatically becomes span attributes, causing duplication"],a:0,e:"Since Baggage propagates on every request (e.g., as HTTP headers), excessive or large baggage entries add overhead to every call."},
+{d:"API",q:"What does a TextMapPropagator's 'inject' operation do?",o:["Writes the current Context (e.g., trace context, baggage) into an outgoing carrier such as HTTP headers","Reads incoming HTTP headers into a new Context","Creates a new span from an HTTP request","Registers a new exporter"],a:0,e:"Inject serializes context (trace context/baggage) into a carrier for outgoing requests; extract does the reverse for incoming requests."},
+{d:"API",q:"What does a TextMapPropagator's 'extract' operation do?",o:["Reads context information out of an incoming carrier (e.g., HTTP headers) and returns a Context reflecting the propagated state","Writes context into an outgoing carrier","Deletes a span from a trace","Batches log records for export"],a:0,e:"Extract parses incoming headers/carriers to reconstruct the Context (trace parent, baggage) for the current request."},
+{d:"API",q:"Which propagator combination would correctly enable both distributed tracing context and custom baggage propagation using W3C standards?",o:["A composite propagator combining the W3C TraceContext propagator and the W3C Baggage propagator","Only the W3C TraceContext propagator, since baggage is included automatically","Only the B3 propagator","No propagator is needed since Baggage is transport-agnostic"],a:0,e:"Trace context and baggage are separate W3C specifications/propagators; both must be registered together to propagate both concerns."},
+{d:"API",q:"Why is a CompositePropagator useful in multi-vendor or migration scenarios?",o:["It allows extracting/injecting multiple header formats simultaneously (e.g., W3C Trace Context and B3) during a transition period","It merges multiple traces into one","It automatically converts logs into traces","It is required for every OpenTelemetry SDK regardless of use case"],a:0,e:"CompositePropagator lets a service understand/produce multiple propagation formats at once, useful when migrating between tracing systems."},
+{d:"API",q:"What is the risk of registering conflicting global propagators in different parts of an application?",o:["Inconsistent or lost context propagation, causing broken traces or missing baggage across service boundaries","Improved performance due to redundant propagation","Automatic deduplication of trace IDs","No risk, since propagators are always merged safely by default"],a:0,e:"Only one global propagator configuration is typically active; conflicting registrations can cause context to be dropped or misinterpreted."},
+{d:"API",q:"What is the primary function of language-specific auto-instrumentation agents (e.g., a Java javaagent)?",o:["To attach at application startup or runtime and automatically instrument known frameworks/libraries without modifying source code","To replace the OpenTelemetry Collector entirely","To act as the only valid exporter destination","To convert manual instrumentation into automatic instrumentation retroactively at compile time"],a:0,e:"Agents typically use bytecode instrumentation or module patching at startup to add telemetry to supported libraries transparently."},
+{d:"API",q:"In Kubernetes, which mechanism does the OpenTelemetry Operator commonly use to enable auto-instrumentation for a workload without modifying its image?",o:["Injecting an init container and/or environment variables/agent via a mutating webhook based on pod annotations","Rebuilding the container image with the agent baked in at CI time only","Requiring the application to manually call the Collector's gRPC API","Modifying the Kubernetes API server source code"],a:0,e:"The Operator uses a mutating admission webhook to inject auto-instrumentation (agent, env vars, init containers) based on annotations."},
+{d:"API",q:"Which of the following is a valid trade-off of using automatic instrumentation agents versus manual instrumentation?",o:["Agents provide fast broad coverage but offer less fine-grained control over exactly what is captured compared to hand-written manual instrumentation","Agents always produce fewer spans than manual instrumentation","Agents cannot propagate context across service boundaries","Manual instrumentation cannot coexist with agents in the same application"],a:0,e:"Agents are convenient and broad but less precise; manual instrumentation can coexist with agents to add custom, fine-grained telemetry."},
+{d:"API",q:"Which statement about combining an auto-instrumentation agent with manual instrumentation in the same application is correct?",o:["They can be combined, since both ultimately use the same registered SDK/TracerProvider, so spans from each are correctly correlated","They cannot be combined under any circumstances","Manual spans created alongside agent-based spans will always appear in separate, disconnected traces","Combining them requires disabling the agent's default context propagation"],a:0,e:"Both manual code and the agent typically share the same global SDK registration, so spans correctly nest within the same trace."},
+{d:"API",q:"Which best describes why some auto-instrumentation agents support 'suppression' of nested/duplicate instrumentation (e.g., avoiding double HTTP client spans)?",o:["To prevent redundant spans when multiple instrumented layers wrap the same underlying call, which would otherwise clutter traces","Because suppression is required to enable sampling","Because suppression converts spans into metrics automatically","Because suppression is needed to propagate baggage"],a:0,e:"Suppression logic avoids creating duplicate spans when instrumentation exists at multiple layers of the same call (e.g., a wrapped HTTP client)."},
+{d:"API",q:"Which SDK pipeline component periodically triggers collection of asynchronous (observable) instrument callbacks and export of metric data?",o:["PeriodicExportingMetricReader","BatchSpanProcessor","TraceIdRatioBased Sampler","TextMapPropagator"],a:0,e:"PeriodicExportingMetricReader invokes observable callbacks and pushes collected metrics to an exporter on a configurable interval."},
+{d:"API",q:"Which SDK pipeline component is responsible for exporting completed LogRecords, analogous to a SpanProcessor for spans?",o:["LogRecordProcessor","MetricReader","Sampler","Resource Detector"],a:0,e:"LogRecordProcessor (e.g., BatchLogRecordProcessor) handles forwarding LogRecords to a configured LogRecordExporter."},
+{d:"API",q:"Why is a BatchLogRecordProcessor generally preferred over a synchronous, per-record export approach in production logging pipelines?",o:["It reduces export call overhead and improves throughput by grouping multiple LogRecords into fewer network requests","It guarantees zero log loss under any failure condition","It eliminates the need for a LogRecordExporter entirely","It converts LogRecords into spans automatically"],a:0,e:"Batching reduces the number of individual export calls, improving efficiency, similar to BatchSpanProcessor's benefit for spans."},
+{d:"API",q:"Which of the following best describes how the Metrics SDK aggregates multiple measurements recorded on the same Counter within a collection interval?",o:["It sums the recorded increments into a single aggregated value per unique attribute set for that interval","It keeps every individual measurement as a separate data point permanently","It averages all measurements regardless of attributes","It discards all but the last measurement recorded"],a:0,e:"Counters aggregate (sum) measurements per unique attribute combination within each collection cycle before exporting a data point."},
+{d:"COL",q:"Which three fundamental building blocks make up an OpenTelemetry Collector pipeline?",o:["Receivers, Processors, and Exporters","Producers, Queues, and Consumers","Ingestors, Filters, and Sinks","Agents, Gateways, and Relays"],a:0,e:"A Collector pipeline is composed of receivers (ingest), processors (transform), and exporters (send onward)."},
+{d:"COL",q:"Which Collector configuration section wires specific receivers, processors, and exporters together for each signal type?",o:["service.pipelines","service.extensions","service.telemetry","connectors"],a:0,e:"service.pipelines defines named pipelines (e.g., traces, metrics, logs) listing which receivers/processors/exporters are used."},
+{d:"COL",q:"In the Collector config, what determines the order in which processors are applied within a pipeline?",o:["The order they are listed in the pipeline's processors array is the order they execute","Processors always execute in alphabetical order by name","Processor order is randomized on each restart for load balancing","Only one processor may run per pipeline, so order is irrelevant"],a:0,e:"Processors execute sequentially in the exact order listed in the pipeline definition."},
+{d:"COL",q:"Why must the batch processor typically be placed near the end of a processing chain, after filtering/attribute processors?",o:["So that filtering and enrichment happen on individual items first, and batching groups the final, already-processed items for efficient export","Because batch must always run first to reduce memory usage before filtering","Because the batch processor cannot coexist with any other processor","Order does not matter since Collector processors are stateless"],a:0,e:"Placing batch after transformation processors ensures batching operates on the finalized data, avoiding wasted work on discarded items."},
+{d:"COL",q:"What does the memory_limiter processor primarily protect against?",o:["The Collector running out of memory and crashing under high load, by refusing data or forcing garbage collection past configured thresholds","Disk space exhaustion from log files","Network bandwidth saturation","CPU throttling by the OS"],a:0,e:"memory_limiter monitors heap usage and, above configured limits, begins refusing incoming data or forcing GC to avoid OOM crashes."},
+{d:"COL",q:"Where should the memory_limiter processor typically be placed within a pipeline's processor list?",o:["As the first processor in the pipeline, so it can reject data early before further processing consumes more memory","As the last processor, right before the exporter","It cannot be used in the same pipeline as the batch processor","Its position does not matter since it operates independently of pipeline order"],a:0,e:"Placing memory_limiter first allows it to reject/limit data as early as possible, minimizing wasted downstream processing under memory pressure."},
+{d:"COL",q:"Which processor would you use to add, update, delete, or hash specific span/metric/log attributes?",o:["attributes processor","batch processor","memory_limiter processor","routing processor"],a:0,e:"The attributes processor supports insert/update/delete/hash actions on telemetry attributes."},
+{d:"COL",q:"Which processor allows dropping entire spans, metrics, or logs based on matching criteria (e.g., resource attributes or span name)?",o:["filter processor","batch processor","memory_limiter processor","spanmetrics connector"],a:0,e:"The filter processor drops telemetry that matches (or doesn't match) configured conditions, useful for reducing noise."},
+{d:"COL",q:"Which processor enables enriching telemetry with attributes automatically detected from the environment (e.g., cloud provider, host)?",o:["resourcedetection processor","resource processor","attributes processor","k8sattributes processor only"],a:0,e:"resourcedetection runs detectors (cloud, host, etc.) within the Collector to populate/enrich Resource attributes."},
+{d:"COL",q:"Which processor is specifically designed to enrich telemetry with Kubernetes metadata (like pod name, namespace, labels)?",o:["k8sattributes processor","resourcedetection processor","attributes processor","routing processor"],a:0,e:"k8sattributes processor queries the Kubernetes API to attach pod/namespace/labels metadata to telemetry based on matching rules (e.g., source IP)."},
+{d:"COL",q:"Which processor uses OTTL (OpenTelemetry Transformation Language) to perform advanced, statement-based transformations on telemetry?",o:["transform processor","batch processor","memory_limiter processor","probabilistic_sampler processor"],a:0,e:"The transform processor uses OTTL statements to conditionally modify spans, metrics, logs, and their attributes with fine-grained logic."},
+{d:"COL",q:"What is a key difference between the probabilistic_sampler processor and the tail_sampling processor?",o:["probabilistic_sampler makes independent, stateless sampling decisions per span/trace ID hash, while tail_sampling buffers whole traces and decides based on complete trace outcome","They are functionally identical, just named differently","tail_sampling can only be used for metrics, not traces","probabilistic_sampler requires the full trace to be buffered first"],a:0,e:"probabilistic_sampler is a lightweight, stateless head-sampling-like approach, whereas tail_sampling requires buffering complete traces to apply outcome-based policies."},
+{d:"COL",q:"Why does the tail_sampling processor typically require all spans of a given trace to arrive at the same Collector instance?",o:["Because it must see the complete trace before making a sampling decision, so partial data on different instances would lead to inconsistent decisions","Because tail sampling does not support distributed deployments at all","Because tail_sampling only works with a single span per trace","Because Collector instances cannot share sampling configuration"],a:0,e:"Tail sampling needs the full trace assembled in one place; a load-balancing exporter routing by trace ID is commonly used to guarantee this in scaled-out deployments."},
+{d:"COL",q:"Which Collector component would you use to route telemetry to different exporters/pipelines based on attribute values or resource content?",o:["routing processor/connector","batch processor","memory_limiter processor","filter processor exclusively"],a:0,e:"The routing processor/connector directs data to different downstream pipelines/exporters based on matching rules."},
+{d:"COL",q:"What is the purpose of the OTLP receiver in the Collector?",o:["To accept telemetry data encoded in the OpenTelemetry Protocol over gRPC and/or HTTP","To scrape Prometheus-format metrics endpoints","To read log files from disk","To export data to a backend"],a:0,e:"The otlp receiver ingests OTLP-formatted traces, metrics, and logs, typically over gRPC (4317) and HTTP (4318)."},
+{d:"COL",q:"Which receiver would you use to pull metrics from an application exposing a Prometheus-style /metrics endpoint?",o:["prometheus receiver","otlp receiver","filelog receiver","jaeger receiver"],a:0,e:"The prometheus receiver scrapes Prometheus-format metrics endpoints, similar to how a Prometheus server would."},
+{d:"COL",q:"Which receiver is used to tail and parse log files directly from disk into the Collector?",o:["filelog receiver","hostmetrics receiver","otlp receiver","zipkin receiver"],a:0,e:"filelog receiver tails log files, applying optional parsing operators, converting them into OpenTelemetry LogRecords."},
+{d:"COL",q:"Which receiver collects system-level metrics such as CPU, memory, disk, and network usage from the host running the Collector?",o:["hostmetrics receiver","otlp receiver","prometheus receiver","filelog receiver"],a:0,e:"hostmetrics receiver gathers OS/host-level resource utilization metrics directly from the machine."},
+{d:"COL",q:"Which exporter would you use to send data to a backend that only understands the OpenTelemetry Protocol over HTTP with JSON or protobuf encoding?",o:["otlphttp exporter","otlp exporter (gRPC)","logging/debug exporter","file exporter only"],a:0,e:"otlphttp specifically uses HTTP transport for OTLP, whereas the otlp exporter typically defaults to gRPC."},
+{d:"COL",q:"What is the primary purpose of the debug (formerly logging) exporter?",o:["Printing telemetry data to the Collector's own logs/console for local troubleshooting and verification","Sending data to a production observability backend","Batching data before other exporters process it","Detecting Kubernetes metadata"],a:0,e:"The debug/logging exporter is intended for local development/troubleshooting, printing telemetry to Collector output rather than a real backend."},
+{d:"COL",q:"Which exporter would allow a Collector to persist telemetry data directly to local files, useful for testing or offline analysis?",o:["file exporter","otlp exporter","prometheus exporter","debug exporter only, since it also writes files"],a:0,e:"The file exporter writes telemetry data to files on disk, often used in testing pipelines or for archival purposes."},
+{d:"COL",q:"What is a Connector in the OpenTelemetry Collector architecture?",o:["A component that acts as an exporter for one pipeline and a receiver for another, joining two pipelines together","A special type of network cable configuration for the Collector host","An alternate name for a processor","A required extension for every Collector deployment"],a:0,e:"Connectors bridge two pipelines, consuming data as an exporter on one side and emitting it as a receiver on the other."},
+{d:"COL",q:"What does the spanmetrics connector do?",o:["It derives Request/Error/Duration-style metrics (like call counts and latency histograms) directly from incoming trace spans","It converts metrics into spans","It samples traces probabilistically","It exports spans to a Prometheus receiver"],a:0,e:"spanmetrics aggregates span data into metrics (e.g., calls, duration histograms) keyed by service/operation, without needing separate manual metrics instrumentation."},
+{d:"COL",q:"What is the purpose of the servicegraph connector?",o:["To infer and emit metrics describing the dependency graph between services based on observed client/server span relationships","To generate a visual dashboard automatically","To replace the need for a Resource on spans","To perform tail-based sampling"],a:0,e:"servicegraph analyzes span relationships (client/server pairs) to produce metrics representing inter-service dependencies and call rates."},
+{d:"COL",q:"Which of the following best describes the 'Agent' deployment pattern for the Collector?",o:["Running a Collector instance close to the workload (e.g., as a sidecar or per-host daemon), often forwarding to a central Collector tier","Running a single, globally shared Collector instance for the entire organization","Deploying the Collector only inside CI/CD pipelines","Deploying the Collector exclusively as a serverless function"],a:0,e:"The agent pattern places lightweight Collector instances near the application (sidecar/daemonset) for initial collection and forwarding."},
+{d:"COL",q:"Which of the following best describes the 'Gateway' deployment pattern for the Collector?",o:["A centralized Collector tier that receives data from many agents/applications, performing heavier processing (e.g., tail sampling, enrichment) before final export","A pattern where every application exports directly to the final backend with no Collector involved","A pattern used only for local development testing","A Collector that only handles logs, never traces or metrics"],a:0,e:"Gateways centralize processing across many sources, enabling operations (like tail sampling) that require aggregated visibility."},
+{d:"COL",q:"What is a key advantage of the agent + gateway two-tier deployment pattern over direct application-to-backend export?",o:["It decouples applications from backend specifics, allows centralized processing/enrichment, and provides buffering/retry resilience","It eliminates the need for any telemetry processing entirely","It guarantees zero telemetry loss under all failure conditions","It removes the need for exporters in the gateway tier"],a:0,e:"The two-tier pattern centralizes cross-cutting concerns (batching, enrichment, retries, routing) while keeping application-side agents lightweight."},
+{d:"COL",q:"Which deployment consideration is most important when running the Collector as a Kubernetes DaemonSet versus a Deployment?",o:["DaemonSet ensures one Collector instance per node, suitable for host-level and local agent collection, while a Deployment offers independently scalable, node-agnostic replicas often used for gateway roles","DaemonSet and Deployment are functionally identical in Kubernetes","A DaemonSet cannot receive OTLP data","A Deployment cannot scrape hostmetrics"],a:0,e:"DaemonSets fit the per-node agent pattern (e.g., for hostmetrics or local sidecar-like collection); Deployments fit centralized, horizontally scaled gateway roles."},
+{d:"COL",q:"Why might a team deploy the Collector as a sidecar container within the same Pod as their application, rather than as a DaemonSet?",o:["To provide tighter isolation and per-application resource limits/configuration, at the cost of higher per-Pod resource overhead","Because sidecars are required to use the OTLP receiver","Because DaemonSets cannot forward data to a gateway tier","Because sidecar Collectors cannot use the batch processor"],a:0,e:"Sidecars isolate configuration/resources per application Pod, trading higher aggregate resource usage for tighter isolation compared to shared per-node agents."},
+{d:"COL",q:"Which factor most directly impacts whether you should horizontally scale a Collector gateway deployment?",o:["Incoming telemetry throughput (data volume/rate) exceeding what a single instance's CPU/memory can handle","The number of programming languages used by instrumented applications","The specific brand of backend receiving the data","The Collector's build version number"],a:0,e:"Horizontal scaling is primarily driven by throughput/load; a single Collector instance has finite CPU/memory capacity."},
+{d:"COL",q:"When horizontally scaling Collector gateways that perform tail-based sampling, what special routing consideration is required?",o:["A load-balancing exporter (or equivalent) must route all spans of the same trace to the same downstream Collector instance for consistent tail sampling","No special routing is needed since tail sampling is stateless per span","All Collector replicas must share the exact same memory address space","Tail sampling automatically synchronizes state across replicas without any routing changes"],a:0,e:"Because tail sampling needs the full trace on one instance, trace-ID-based load balancing (e.g., via the loadbalancing exporter) is required when scaling horizontally."},
+{d:"COL",q:"Which exporter is specifically designed to consistently route spans/traces by trace ID to a specific set of backend Collector instances for stateful processing?",o:["loadbalancing exporter","otlp exporter (standard)","debug exporter","file exporter"],a:0,e:"The loadbalancing exporter hashes trace IDs (or another key) to consistently route data to the same downstream instance, supporting tail sampling at scale."},
+{d:"COL",q:"What is a common scaling risk if the batch processor's batch size and timeout are misconfigured (e.g., far too large) under high load?",o:["Increased memory usage and export latency, as the Collector waits longer or holds more data in memory before exporting a batch","Immediate data loss with no other side effects","Zero effect on memory or latency at any batch size","Guaranteed higher throughput regardless of size"],a:0,e:"Overly large batches/timeouts increase in-memory buffering and delay when data is actually exported, raising memory pressure and latency."},
+{d:"COL",q:"Which combination of processors is commonly recommended near the start of a scaled-out Collector pipeline to protect against overload?",o:["memory_limiter first, to shed load before deeper processing under memory pressure","batch processor first, always ahead of memory_limiter","routing processor first, in every deployment","k8sattributes processor first, always ahead of memory_limiter"],a:0,e:"memory_limiter is best placed first to reject/limit data early before consuming more resources in subsequent processors."},
+{d:"COL",q:"What scaling benefit does using multiple parallel pipelines (e.g., separate pipelines per signal type) provide in Collector configuration?",o:["It allows independent tuning, processing, and scaling behavior per signal type (traces, metrics, logs) based on their differing volume/processing needs","It automatically merges all signals into a single exported stream","It removes the need for receivers on each pipeline","It is required because a single pipeline cannot process more than one signal type ever"],a:0,e:"Separate pipelines per signal let you apply different processors/exporters/tuning suited to each signal's characteristics and volume."},
+{d:"COL",q:"Which of these is a valid reason to introduce a queueing/persistent storage mechanism between Collector tiers when scaling?",o:["To smooth out traffic bursts and provide resilience against temporary downstream unavailability without dropping data","To permanently replace the need for any exporter","To eliminate the need for the batch processor","To bypass memory_limiter entirely"],a:0,e:"Queues (e.g., sending_queue with persistent storage) absorb bursts and outages, improving resilience under scale without necessarily dropping telemetry."},
+{d:"COL",q:"Which processor would you use to remove a sensitive attribute (e.g., a customer email) from spans before they leave the Collector?",o:["attributes processor with a delete action (or the transform processor with OTTL)","batch processor","memory_limiter processor","resourcedetection processor"],a:0,e:"The attributes processor supports delete/update actions, and the transform processor's OTTL can achieve the same with more complex conditions."},
+{d:"COL",q:"Which processor would best convert a specific attribute's value type (e.g., from string to int) or rename an attribute key using flexible expression-based logic?",o:["transform processor (using OTTL)","batch processor","filter processor alone","memory_limiter processor"],a:0,e:"The transform processor's OTTL supports rich data manipulation, including type conversions and renaming, beyond the simpler attributes processor's fixed actions."},
+{d:"COL",q:"Which processor would you use to aggregate or downsample metrics data points to reduce cardinality or resolution before export?",o:["Metric-specific transformation processors (e.g., converting cumulative to delta, or renaming/aggregating metric data)","batch processor","memory_limiter processor","filter processor exclusively, without any metric-specific logic"],a:0,e:"Metric-specific processors handle cumulative-to-delta conversion or aggregation, distinct from generic batch/filter processors."},
+{d:"COL",q:"What is the risk of applying the filter processor incorrectly to drop spans based on a broad attribute match?",o:["Unintentionally discarding legitimate, important telemetry data along with the intended noise","Improving data fidelity beyond what sampling can achieve","Guaranteeing all spans are retained regardless of match conditions","Causing the Collector to duplicate matched spans instead of dropping them"],a:0,e:"Overly broad filter conditions can inadvertently drop valid, wanted telemetry, so filter rules should be as precise as possible."},
+{d:"COL",q:"Which transformation would be appropriate to normalize inconsistent attribute naming (e.g., 'httpMethod' vs 'http.request.method') across multiple legacy services?",o:["Using the transform processor (OTTL) or attributes processor to rename/remap attributes to the standard semantic convention name","Using the memory_limiter processor to rename attributes","Relying solely on the batch processor to normalize names","This cannot be done inside the Collector and requires code changes in every service"],a:0,e:"Attribute renaming/remapping is a common Collector-side transformation task, handled by the attributes or transform processor, avoiding changes to every legacy service."},
+{d:"COL",q:"Which processor combination would most effectively both enrich spans with Kubernetes metadata and then drop low-value health-check spans?",o:["k8sattributes processor followed by a filter processor matching health-check span names","filter processor followed by k8sattributes processor, since order does not matter","batch processor alone, since it can both enrich and filter","memory_limiter processor alone"],a:0,e:"Enrichment (k8sattributes) typically happens before filtering so filter rules can potentially use the newly added attributes, and order in the pipeline is significant."},
+{d:"COL",q:"Which extension provides an HTTP endpoint commonly used by orchestrators to determine whether a running Collector instance is ready to receive traffic?",o:["health_check extension","zpages extension","pprof extension","file_storage extension"],a:0,e:"health_check exposes a simple HTTP endpoint reporting Collector health, used for readiness/liveness checks."},
+{d:"COL",q:"Which Collector distribution is intended to include only the essential, stable core components maintained by the core OpenTelemetry community?",o:["OpenTelemetry Collector Core","OpenTelemetry Collector Contrib","OpenTelemetry Java Agent distribution","OpenTelemetry Operator distribution"],a:0,e:"The core distribution ships foundational, stable components; Contrib adds many additional community/vendor components not in core."},
+{d:"COL",q:"What is the OpenTelemetry Operator primarily used for in Kubernetes environments?",o:["Managing Collector custom resources (deployment, configuration) and optionally injecting auto-instrumentation into workloads","Replacing kube-proxy for network routing","Managing persistent volume claims for application data","Scheduling application pods across nodes"],a:0,e:"The Operator is a Kubernetes controller managing OpenTelemetryCollector and Instrumentation custom resources."},
+{d:"MAINT",q:"Why is consistent context propagation configuration critical across all services when debugging a multi-hop distributed transaction?",o:["Mismatched or missing propagators between services can break the trace chain, making it appear as multiple disconnected traces instead of one","Context propagation only affects metrics, not traces","Propagation configuration is irrelevant to debugging distributed traces","Context propagation is automatically synchronized without any configuration"],a:0,e:"If services use incompatible or missing propagators, trace context fails to carry through, fragmenting what should be one continuous trace."},
+{d:"MAINT",q:"A trace unexpectedly splits into two separate traces at a specific service boundary. What is a likely root cause to investigate first?",o:["That service may not be correctly extracting and reusing the incoming trace context before starting new spans","The Collector's batch processor timeout is too short","The database is down","The SDK version is too new"],a:0,e:"A broken trace chain at a specific hop often indicates that service is not properly extracting/propagating the parent context into the spans it creates."},
+{d:"MAINT",q:"Which propagation-related issue could cause Baggage to silently disappear between two internal services, even though tracing works correctly?",o:["The baggage propagator may not be registered/configured on one of the services, even if the trace context propagator is present","Baggage always propagates automatically regardless of configuration","Baggage is deprecated and no longer functions in OpenTelemetry","Baggage failures always also break trace context propagation"],a:0,e:"Trace context and Baggage are propagated by separate propagators; a service could correctly propagate trace context while missing the baggage propagator."},
+{d:"MAINT",q:"When migrating services incrementally from a legacy B3 propagation format to W3C Trace Context, what is a safe interim strategy?",o:["Configure a composite propagator supporting both B3 and W3C Trace Context on all services during the migration window","Immediately disable B3 everywhere on day one before any service supports W3C","Force all services to skip context propagation entirely during migration","Only update the propagator on the final downstream service"],a:0,e:"Supporting both formats simultaneously via a composite propagator avoids breaking traces while services are migrated incrementally."},
+{d:"MAINT",q:"Which symptom most strongly suggests a context propagation misconfiguration rather than a sampling issue?",o:["Traces consistently break into disconnected fragments at the same specific service boundary, regardless of sampling settings","Some traces are simply missing entirely at a low, roughly consistent rate matching the configured sampling ratio","All services show identical trace volume","No spans are being generated at all anywhere"],a:0,e:"Consistent fragmentation at one specific hop points to propagation misconfiguration, whereas uniformly reduced trace volume across the board better matches sampling behavior."},
+{d:"MAINT",q:"What debugging step helps verify whether trace context is being correctly propagated over HTTP between two services?",o:["Inspecting outgoing and incoming HTTP headers (e.g., traceparent) directly to confirm the same trace ID is carried across the call","Only checking the final backend dashboard for trace completeness","Restarting the Collector and hoping the issue resolves","Increasing the sampling ratio to 100 percent"],a:0,e:"Directly inspecting the traceparent header on the wire confirms whether propagation is functioning correctly between the two services."},
+{d:"MAINT",q:"Which built-in Collector extension is most useful for a live, in-browser view of pipeline component status for debugging?",o:["zpages extension","memory_limiter processor","attributes processor","otlp receiver"],a:0,e:"zpages exposes internal diagnostic web pages (e.g., tracez, servicez) useful for live debugging of Collector pipeline behavior."},
+{d:"MAINT",q:"Which extension exposes Go pprof-style profiling endpoints to help diagnose CPU or memory issues within the Collector process itself?",o:["pprof extension","health_check extension","zpages extension exclusively","file_storage extension"],a:0,e:"pprof extension exposes profiling endpoints for analyzing Collector CPU and memory performance issues directly."},
+{d:"MAINT",q:"A Collector is silently dropping data with no visible errors in its own logs. Which internal telemetry source should be checked first?",o:["The Collector's own self-observability metrics (e.g., otelcol_processor_dropped_spans, otelcol_exporter_send_failed_*)","The application's business logic logs only","The end-user's browser console","The Kubernetes API server audit logs"],a:0,e:"Collector self-metrics expose counters for dropped/refused/failed items per component, which are the primary signal for diagnosing silent data loss."},
+{d:"MAINT",q:"Which debugging technique is most effective for confirming exactly what data a Collector pipeline is receiving and emitting during local troubleshooting?",o:["Temporarily adding the debug/logging exporter to print received telemetry to the console","Disabling all processors permanently in production","Increasing the tail_sampling processor's decision wait time indefinitely","Switching every exporter to file exporter permanently"],a:0,e:"The debug/logging exporter is specifically intended for local inspection of the exact data flowing through a pipeline."},
+{d:"MAINT",q:"Which is a common cause of a Collector pipeline exhibiting high memory usage that eventually triggers memory_limiter to start refusing data?",o:["A downstream exporter destination becoming slow or unavailable, causing data to back up in queues/batches faster than it can be exported","The otlp receiver rejecting malformed payloads","The health_check extension consuming excessive memory","zpages being enabled in production"],a:0,e:"When exports can't keep pace with ingestion (e.g., backend outage or slowness), data accumulates in memory, eventually triggering memory_limiter."},
+{d:"MAINT",q:"Which configuration change would most directly help mitigate a downstream exporter failing intermittently, without dropping data immediately?",o:["Enabling a sending_queue with retry_on_failure to buffer and retry exports during transient downstream failures","Removing the exporter entirely from the pipeline","Disabling the batch processor","Reducing the receiver's supported protocols"],a:0,e:"A retrying sending_queue on the exporter allows the Collector to buffer and retry during transient downstream issues rather than immediately dropping data."},
+{d:"MAINT",q:"Which extension would help retain a Collector's export queue across process restarts to avoid losing buffered data during a crash or redeploy?",o:["file_storage extension used as a persistent queue backend","zpages extension","pprof extension","health_check extension"],a:0,e:"file_storage provides a persistent storage backend that exporters' sending_queue can use, surviving Collector restarts."},
+{d:"MAINT",q:"What is the most likely consequence of not configuring retry/backoff behavior on an OTLP exporter facing a temporarily unreachable backend?",o:["Export attempts fail and telemetry data for that period may be permanently dropped instead of retried","The Collector will pause receiving new data indefinitely until the backend returns","Data will automatically reroute to the debug exporter","The receiver will stop accepting connections entirely"],a:0,e:"Without retry/backoff (or a persistent queue), failed exports during backend outages typically result in permanent data loss for that window."},
+{d:"MAINT",q:"Which error-handling consideration is important when configuring the sending_queue's queue_size for an exporter under bursty load?",o:["Setting it too small risks dropping data during bursts, while setting it too large risks excessive memory usage if the backend is slow","queue_size has no effect on memory usage","queue_size only affects CPU utilization, never memory","queue_size must always equal the batch processor's send_batch_size exactly"],a:0,e:"queue_size directly trades off between memory consumption and the ability to buffer through temporary bursts or backend slowness."},
+{d:"MAINT",q:"A downstream backend enforces a strict payload size limit, and the Collector's exporter frequently fails with 'payload too large' errors. What is the most direct fix?",o:["Reduce the batch processor's send_batch_size (and/or send_batch_max_size) so exported batches stay under the backend's limit","Increase the queue_size setting on the exporter","Remove the memory_limiter processor entirely","Switch the receiver from otlp to otlphttp"],a:0,e:"Batch size settings directly control the size of exported payloads; reducing them addresses payload-too-large errors from strict backends."},
+{d:"MAINT",q:"Which is the most appropriate way to handle telemetry from services still emitting attributes under an older, now-renamed semantic convention?",o:["Apply a schema transformation (or Collector-side attribute renaming) to map old attribute names to the new stable convention names","Ignore the mismatch since it has no practical impact on dashboards or alerts","Force every legacy service to upgrade simultaneously before any telemetry is accepted","Disable semantic conventions checking entirely, since it is optional and unnecessary"],a:0,e:"Schema transformation (via Schema URL-aware tooling) or Collector-side renaming bridges old and new attribute names during a gradual migration."},
+{d:"MAINT",q:"Why is tracking the Schema URL important when analyzing telemetry from services instrumented at different points in time?",o:["It tells consumers which version of semantic conventions was used, enabling correct interpretation or automated transformation of potentially renamed attributes","It has no practical use beyond documentation","It determines the sampling rate applied to that data","It replaces the need for a Resource entirely"],a:0,e:"The Schema URL anchors telemetry to a specific semantic convention version, which is essential for correctly interpreting or migrating older/newer attribute names."},
+{d:"MAINT",q:"A dashboard built against the old semantic convention attribute net.peer.name stops working after upgrading instrumentation to use server.address. What is the most robust long-term fix?",o:["Update the dashboard/queries to the new stable attribute name, optionally using schema transformation during a transition period","Roll back all library upgrades indefinitely to avoid ever encountering renamed attributes","Disable the dashboard permanently","Manually rename every historical data point in the backend"],a:0,e:"The sustainable fix is updating consumers (dashboards/alerts) to the new stable convention names, using schema-aware transformation to smooth the transition."},
+{d:"MAINT",q:"What operational practice helps avoid breaking changes when semantic convention attributes move from experimental to stable and are renamed?",o:["Monitoring semantic convention changelogs/schema versions and planning coordinated updates to instrumentation and downstream consumers","Ignoring changelogs since experimental attributes are guaranteed to remain unchanged","Always disabling automatic instrumentation updates permanently","Assuming stable conventions are never renamed once marked experimental"],a:0,e:"Because experimental conventions can still change, tracking changelogs and planning coordinated updates avoids unexpected breakage when they later stabilize."},
+{d:"MAINT",q:"Which strategy best supports long-term schema management when multiple teams instrument services independently across an organization?",o:["Establishing shared guidelines for adopting and versioning semantic conventions, plus centralized tracking of Schema URLs in use across services","Allowing each team to invent entirely custom, undocumented attribute names with no coordination","Disabling Resource attributes to avoid any versioning concerns","Mandating that no service may ever upgrade its instrumentation libraries"],a:0,e:"Centralized schema/version tracking and shared conventions across teams reduce fragmentation and ease coordinated attribute migrations."},
+{d:"MAINT",q:"Which debugging approach is most useful when trying to determine if a missing span is due to sampling versus a pipeline error?",o:["Temporarily setting the sampler to AlwaysOn (or checking trace flags) to rule out sampling, then examining Collector self-metrics/logs for drops or errors","Assuming it is always a sampling issue without further investigation","Deleting and recreating the trace manually","Restarting all application instances simultaneously"],a:0,e:"Ruling out sampling first (by forcing full sampling) isolates whether the issue is a sampling decision or an actual pipeline/export problem."},
+{d:"MAINT",q:"Which is the most likely cause if traces are complete and correct in a development environment but consistently incomplete in production?",o:["Production likely uses a lower sampling ratio or an additional Collector tier/processor not present in development, altering what gets recorded or forwarded","OpenTelemetry inherently behaves differently between environments with no configuration involved","Production databases are slower than development databases","The application code itself only runs partially in production"],a:0,e:"Differences in sampling configuration or pipeline topology between environments are the most common cause of discrepancies in trace completeness."}
+];
+
+const DOMAIN_LABELS = {
+  FUND: "Fundamentals of Observability",
+  API: "The OpenTelemetry API and SDK",
+  COL: "The OpenTelemetry Collector",
+  MAINT: "Maintaining & Debugging Pipelines"
+};
+const DOMAIN_QUOTAS = { FUND: 10, API: 28, COL: 16, MAINT: 6 };
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function shuffleOptions(item) {
+  const correctText = item.o[item.a];
+  const opts = shuffleArray(item.o);
+  return { c: DOMAIN_LABELS[item.d], q: item.q, o: opts, a: opts.indexOf(correctText), e: item.e };
+}
+
+function buildExam() {
+  let chosen = [];
+  Object.keys(DOMAIN_QUOTAS).forEach(domain => {
+    const domainPool = POOL.filter(q => q.d === domain);
+    const picked = shuffleArray(domainPool).slice(0, DOMAIN_QUOTAS[domain]);
+    chosen = chosen.concat(picked);
+  });
+  chosen = shuffleArray(chosen);
+  return chosen.map(shuffleOptions);
+}
+
+// Runtime state
+let QUESTIONS = [];
+let current = 0;
+let answers = [];
+let flagged = [];
+let submitted = false;
+let timerInterval = null;
+let secondsLeft = 45 * 60;
+
+const startScreen = document.getElementById('start-screen');
+const quizScreen = document.getElementById('quiz-screen');
+const resultScreen = document.getElementById('result-screen');
+
+document.getElementById('start-btn').addEventListener('click', startExam);
+document.getElementById('prev-btn').addEventListener('click', () => go(current - 1));
+document.getElementById('next-btn').addEventListener('click', () => go(current + 1));
+document.getElementById('flag-btn').addEventListener('click', toggleFlag);
+document.getElementById('submit-btn').addEventListener('click', () => confirmSubmit());
+document.getElementById('quit-btn').addEventListener('click', () => {
+  if (confirm('Exit the exam? Your progress will be lost.')) location.reload();
+});
+document.getElementById('review-btn').addEventListener('click', toggleReview);
+document.getElementById('retry-btn').addEventListener('click', () => location.reload());
+
+document.addEventListener('keydown', (e) => {
+  if (quizScreen.classList.contains('hidden') || submitted) return;
+  if (e.key >= '1' && e.key <= '4') {
+    const idx = Number(e.key) - 1;
+    if (idx < QUESTIONS[current].o.length) selectOption(idx);
+  } else if (e.key === 'ArrowRight') {
+    if (current === QUESTIONS.length - 1) confirmSubmit();
+    else go(current + 1);
+  } else if (e.key === 'ArrowLeft') {
+    go(current - 1);
+  }
+});
+
+function buildGridNav() {
+  const grid = document.getElementById('grid-nav');
+  grid.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.textContent = i + 1;
+    b.addEventListener('click', () => go(i));
+    grid.appendChild(b);
+  });
+}
+
+function startExam() {
+  QUESTIONS = buildExam();
+  answers = new Array(QUESTIONS.length).fill(null);
+  flagged = new Array(QUESTIONS.length).fill(false);
+  current = 0;
+  submitted = false;
+  secondsLeft = 45 * 60;
+
+  startScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  document.getElementById('live-total').textContent = QUESTIONS.length;
+  buildGridNav();
+  renderQuestion();
+  startTimer();
+}
+
+function startTimer() {
+  const timerEl = document.getElementById('timer');
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    if (secondsLeft <= 0) {
+      clearInterval(timerInterval);
+      secondsLeft = 0;
+      finishExam();
+    }
+    const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+    const s = (secondsLeft % 60).toString().padStart(2, '0');
+    timerEl.textContent = `${m}:${s}`;
+    timerEl.classList.toggle('low', secondsLeft <= 60);
+  }, 1000);
+}
+
+function go(index) {
+  if (index < 0 || index >= QUESTIONS.length) return;
+  current = index;
+  renderQuestion();
+}
+
+function toggleFlag() {
+  flagged[current] = !flagged[current];
+  renderQuestion();
+}
+
+function selectOption(idx) {
+  if (submitted) return;
+  if (answers[current] !== null) return;
+  answers[current] = idx;
+  renderQuestion();
+  updateGridNav();
+  updateLiveScore();
+}
+
+function updateLiveScore() {
+  let score = 0;
+  answers.forEach((ans, i) => { if (ans === QUESTIONS[i].a) score++; });
+  document.getElementById('live-score').textContent = score;
+}
+
+function updateGridNav() {
+  const buttons = document.getElementById('grid-nav').children;
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].classList.toggle('answered', answers[i] !== null);
+    buttons[i].classList.toggle('current', i === current);
+  }
+}
+
+function renderQuestion() {
+  const item = QUESTIONS[current];
+  document.getElementById('q-num').textContent = current + 1;
+  document.getElementById('q-category').textContent = `Domain: ${item.c}${flagged[current] ? '  ·  🚩 Flagged' : ''}`;
+  document.getElementById('q-text').textContent = item.q;
+  document.getElementById('progress-fill').style.width = `${((current + 1) / QUESTIONS.length) * 100}%`;
+
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const answered = answers[current] !== null;
+  optionsDiv.classList.toggle('answered', answered);
+  item.o.forEach((opt, idx) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    if (answers[current] === idx) div.classList.add('selected');
+    if (answered && idx === item.a) div.classList.add('correct');
+    if (answered && answers[current] === idx && idx !== item.a) div.classList.add('incorrect');
+    div.innerHTML = `<div class="marker">${letters[idx]}</div><div>${opt}</div>`;
+    div.addEventListener('click', () => selectOption(idx));
+    optionsDiv.appendChild(div);
+  });
+
+  const explainEl = document.getElementById('explain');
+  if (answered) {
+    const wasCorrect = answers[current] === item.a;
+    explainEl.innerHTML = `<b>${wasCorrect ? '✔ Correct' : '✘ Incorrect'}:</b> ${item.e}`;
+    explainEl.classList.add('show');
+  } else {
+    explainEl.classList.remove('show');
+    explainEl.innerHTML = '';
+  }
+
+  document.getElementById('prev-btn').disabled = current === 0;
+  document.getElementById('next-btn').textContent = current === QUESTIONS.length - 1 ? 'Finish' : 'Next →';
+  updateGridNav();
+}
+
+function confirmSubmit() {
+  const unanswered = answers.filter(a => a === null).length;
+  const msg = unanswered > 0
+    ? `You have ${unanswered} unanswered question(s). Submit anyway?`
+    : 'Submit your exam for grading?';
+  if (confirm(msg)) finishExam();
+}
+
+function finishExam() {
+  submitted = true;
+  clearInterval(timerInterval);
+  quizScreen.classList.add('hidden');
+  resultScreen.classList.remove('hidden');
+
+  let score = 0;
+  answers.forEach((ans, i) => { if (ans === QUESTIONS[i].a) score++; });
+  const pct = Math.round((score / QUESTIONS.length) * 100);
+  document.getElementById('final-pct').textContent = `${pct}%`;
+  document.getElementById('final-frac').textContent = `${score}/${QUESTIONS.length}`;
+
+  const passMsg = document.getElementById('pass-msg');
+  const circle = document.querySelector('.score-circle');
+  if (pct >= 75) {
+    passMsg.innerHTML = `<span class="pass">✔ Pass</span> — Great job! You've demonstrated solid OpenTelemetry knowledge.`;
+    circle.style.borderColor = 'var(--good)';
+  } else {
+    passMsg.innerHTML = `<span class="fail">✘ Not yet passing</span> — Review the explanations below and try again.`;
+    circle.style.borderColor = 'var(--bad)';
+  }
+
+  buildReviewList();
+}
+
+function buildReviewList() {
+  const list = document.getElementById('review-list');
+  list.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  QUESTIONS.forEach((item, i) => {
+    const isCorrect = answers[i] === item.a;
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    const yourAnswer = answers[i] === null ? 'No answer' : `${letters[answers[i]]}. ${item.o[answers[i]]}`;
+    div.innerHTML = `
+      <span class="tag ${isCorrect ? 'ok' : 'no'}">${isCorrect ? 'CORRECT' : 'INCORRECT'}</span>
+      <div style="font-weight:600;margin:6px 0;">${i + 1}. ${item.q}</div>
+      <div style="font-size:0.85rem;color:var(--muted);">Your answer: ${yourAnswer}</div>
+      <div style="font-size:0.85rem;color:var(--good);">Correct answer: ${letters[item.a]}. ${item.o[item.a]}</div>
+      <div class="explain show" style="margin-top:8px;">${item.e}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function toggleReview() {
+  const list = document.getElementById('review-list');
+  list.classList.toggle('hidden');
+  document.getElementById('review-btn').textContent =
+    list.classList.contains('hidden') ? 'Review Answers' : 'Hide Review';
+}
+</script>
+</body>
+</html>
